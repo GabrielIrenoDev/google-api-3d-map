@@ -1,35 +1,49 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { APIProvider } from "@vis.gl/react-google-maps";
+import { useCallback, useState } from "react";
+import { Map3D, type Map3DCameraProps } from "./components/map-3d";
+import { AutocompleteCustom } from "./components/autocomplete";
+
+const INITIAL_VIEW_PROPS = {
+	center: { lat: 37.72809, lng: -119.64473, altitude: 1300 },
+	range: 5000,
+	heading: 61,
+	tilt: 69,
+	roll: 0,
+};
 
 function App() {
-  const [count, setCount] = useState(0)
+	const [_selectedPlace, setSelectedPlace] =
+		useState<google.maps.places.PlaceResult | null>(null);
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+	const [viewProps, setViewProps] = useState(INITIAL_VIEW_PROPS);
+
+	const handleCameraChange = useCallback((props: Map3DCameraProps) => {
+		setViewProps((oldProps) => ({ ...oldProps, ...props }));
+	}, []);
+
+	return (
+		<APIProvider version="alpha" apiKey={import.meta.env.VITE_API_KEY}>
+			<div
+				style={{
+					height: "90vh",
+					width: "100%",
+					display: "flex",
+					flexDirection: "column",
+					gap: "1rem",
+				}}
+			>
+				<div className="autocomplete-control">
+					<AutocompleteCustom onPlaceSelect={setSelectedPlace} />
+				</div>
+
+				<Map3D
+					{...viewProps}
+					onCameraChange={handleCameraChange}
+					defaultLabelsDisabled
+				/>
+			</div>
+		</APIProvider>
+	);
 }
 
-export default App
+export default App;
